@@ -2,25 +2,30 @@
 title: "project_proposal"
 format: html
 editor: visual
+author: "Soren Fliegel, Chris Liu, Kevin Cisneros-Cuevas, Haoxian Liu"
+format: 
+  html:
+    embed-resources: true
+    code-tools: true
+    toc: true
+    number-sections: true
+editor: source
+execute: 
+  error: true
+  echo: true
+  message: false
+  warning: false
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+```{r setup}
+library(tidyverse)
 ```
 
-You can add options to executable code like this
+# Dataset 
+
+Detailed description of the datasets and variables here.
 
 ```{r}
-#| echo: false
-2 * 2
+life_expectancy <- read.csv("lex.csv")
+gdp_per_capita <- read.csv("gdp_pcap.csv")
 ```
-
-The `echo: false` option disables the printing of code (only output is displayed).
