@@ -22,7 +22,9 @@ library(tidyverse)
 library(purrr)
 ```
 
-# Dataset Introcuction
+# Dataset Introduction
+
+Sourced from "<https://www.gapminder.org/data/>"
 
 The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine.
 
