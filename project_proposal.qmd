@@ -35,6 +35,10 @@ Next, we will explore GDP (Gross Domestic Product) per capita, also assembled by
 gdp_per_capita <- read.csv("gdp_pcap.csv")
 ```
 
+# Hypothesized Relationship between the Variables
+
+The relationship between GDP per capita and life expectancy is something that has already been looked at in other studies and has been talked about as the Preston curve. According to research from the [Centre for Economic Policy Research (CEPR)](https://cepr.org/voxeu/columns/health-income-and-preston-curve) higher income levels usually lead to a increase in life expectancy. This is a relationship that we hope to see with our data although sometimes there are other factors like healthcare policies or political stability that can influence the relationship between our two variables.
+
 # Cleaning the Data
 
 The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data (20% is our threshold to reliable and representative data that minimizes biases introduced by imputation). Let also make the column names a little bit nicer by adding a prefix before the year instead of X. That way it is more descriptive.
@@ -69,6 +73,7 @@ clean_gdp_per_capita <- gdp_per_capita |>
 ```
 
 Below, we have pivoted the `year` variable in both datasets to be a single column, as opposed to the dataframes having a column representing a year.
+
 ```{r}
 long_life_expectancy <- clean_life_expectancy |> 
   pivot_longer(
@@ -87,8 +92,8 @@ long_gdp_per_capita <- clean_gdp_per_capita |>
   )
 ```
 
+Finally, we join both datasets by country and year.
 
-Finally, we join both datasets by country and year. 
 ```{r}
 clean_long_df <- long_life_expectancy |> 
   inner_join(long_gdp_per_capita, 
