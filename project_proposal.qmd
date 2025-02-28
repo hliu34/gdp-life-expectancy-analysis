@@ -1,8 +1,6 @@
 ---
-title: "project_proposal"
-format: html
-editor: visual
-author: "Soren Fliegel, Chris Liu, Kevin Cisneros-Cuevas, Haoxian Liu"
+title: "STAT 331 Group A Project Proposal"
+author: "Kevin Cisneros-Cuevas, Soren Fliegel, Chris Liu, Haoxian Liu"
 format: 
   html:
     embed-resources: true
@@ -19,7 +17,6 @@ execute:
 
 ```{r setup}
 library(tidyverse)
-library(purrr)
 ```
 
 # Dataset Introduction
@@ -40,7 +37,7 @@ gdp_per_capita <- read.csv("gdp_pcap.csv")
 
 # Cleaning the Data
 
-The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data. Let also make the column names a little bit nicer by adding a prefix before the year instead of X. That way it is more descriptive.
+The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data (20% is our threshold to reliable and representative data that minimizes biases introduced by imputation). Let also make the column names a little bit nicer by adding a prefix before the year instead of X. That way it is more descriptive.
 
 ```{r}
 
@@ -51,17 +48,12 @@ clean_life_expectancy <- life_expectancy |>
   # gsub: https://www.statology.org/gsub-r/
   # rename: https://dplyr.tidyverse.org/reference/rename.html
   rename_with(~ gsub("^X", "lex_", .), starts_with("X"))
-
-clean_life_expectancy
-  
 ```
 
 Let's also rename the year columns in the `gdp_per_capita` table. Also, it seems like not every value in the data set is numeric. Some of the GDP per-capita values have "k" notation (e.g. 24.5k instead of 24500). So, we will need to convert them to actual numbers.
 
 ```{r}
-
 # using a function :)
-
 convert_k <- function(vec){
   has_k <- str_detect(vec, "k")
   vec_numeric <- as.numeric(str_replace(vec, "k", "")) 
@@ -70,20 +62,37 @@ convert_k <- function(vec){
 ```
 
 ```{r}
- 
 clean_gdp_per_capita <- gdp_per_capita |> 
   rename_with(~ gsub("^X", "gdp_per_capita_", .), starts_with("X")) |> 
   # all columns type -> numeric
   mutate(across(-country, convert_k))
-
-clean_gdp_per_capita
-  
 ```
 
+Below, we have pivoted the `year` variable in both datasets to be a single column, as opposed to the dataframes having a column representing a year.
 ```{r}
+long_life_expectancy <- clean_life_expectancy |> 
+  pivot_longer(
+    cols = starts_with("lex_"), 
+    names_to = "year", 
+    names_prefix = "lex_", 
+    values_to = "life_expectancy"
+  )
 
-cleaned_df <- clean_life_expectancy |> 
-  inner_join(clean_gdp_per_capita, join_by("country")) 
-  
-cleaned_df
+long_gdp_per_capita <- clean_gdp_per_capita |> 
+  pivot_longer(
+    cols = starts_with("gdp_per_capita_"), 
+    names_to = "year", 
+    names_prefix = "gdp_per_capita_", 
+    values_to = "gdp_per_capita"
+  )
+```
+
+
+Finally, we join both datasets by country and year. 
+```{r}
+clean_long_df <- long_life_expectancy |> 
+  inner_join(long_gdp_per_capita, 
+             by = c("country", "year")) 
+clean_long_df |>
+  head(n = 5)
 ```
