@@ -98,6 +98,6 @@ Finally, we join both datasets by country and year.
 clean_long_df <- long_life_expectancy |> 
   inner_join(long_gdp_per_capita, 
              by = c("country", "year")) 
-clean_long_df |>
-  head(n = 5)
 ```
+
+The `clean_long_df` will have 4 total columns: `country`, `year`, `life_expectancy`, and `gdp_per_capita`.
