@@ -117,14 +117,14 @@ This animation shows the same graph from above (GDP per Capita vs Life Expectanc
 
 # 2.2 Linear Regression
 
-Before running the linear regression, summarising the data to one x value and one y value per country in the year 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1945 because this is the year the Second World War ended.
+Before running the linear regression, summarising the data to one x value and one y value per country in the years 1939 to 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1939 to 1945 because these are the years the Second World War occured. 
 
-The linear regression contains two variables of interest: average GDP per capitia for each country (explanatory variable: $X$) and average life expectancy for each (response variable: $Y$).
+The linear regression contains two variables of interest: average GDP per capitia for each country during the Second World War (explanatory variable: $X$) and average life expectancy for each country during the Second World War (response variable: $Y$).
 
 ```{r}
 options(scipen = 999) # disable scientific notation!
 summarised_lm <- clean_long_df |> 
-  filter(year == 1945) |>
+  filter(year %in% 1939:1945) |>
   group_by(country) |> 
   summarize(
     avg_gdp_per_capita = mean(gdp_per_capita, na.rm = TRUE),
