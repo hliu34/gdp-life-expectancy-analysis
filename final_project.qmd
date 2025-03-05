@@ -4,8 +4,9 @@ author: "Kevin Cisneros-Cuevas, Soren Fliegel, Chris Liu, Haoxian Liu"
 code-fold: true
 format: 
   html:
-    code-fold: true
+    code-fold: show
     embed-resources: true
+    html-table-processing: none
     code-tools: true
     toc: true
     number-sections: true
@@ -22,6 +23,8 @@ library(tidyverse)
 library(gganimate)
 library(knitr)
 library(gifski)
+library(broom)
+library(kableExtra)
 ```
 
 Previous code from project proposal:
@@ -108,16 +111,15 @@ animated_over_time <- clean_long_df |>
   ease_aes("linear")
 
 # Source: https://gganimate.com/
-# using gifski to render a video instead of gif
-# should show in the "viewer" tab and also when rendered as html
-animate(animated_over_time, renderer = gifski_renderer())
+# should show in the "viewer" tab and also when rendered in html
+animate(animated_over_time, renderer = gifski_renderer(), nframes = 150, duration = 25)
 ```
 
 This animation shows the same graph from above (GDP per Capita vs Life Expectancy) over the years 1800-2017. The value here comes from our ability to see an increasing gap between various country's wealth levels (and life expectancy as a result), but also in the overall life expectancy rising across the globe. This chart reinforces the idea presented above of ever-increasing wealth inequality globally, with some countries exploding in wealth and others staying nearly the same, all from relatively similar starting points in the year 1800. This animation also shows that the logarithmic pattern is followed with a medium strength.
 
 # 2.2 Linear Regression
 
-Before running the linear regression, summarising the data to one x value and one y value per country in the years 1939 to 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1939 to 1945 because these are the years the Second World War occured. 
+Before running the linear regression, summarising the data to one x value and one y value per country in the years 1939 to 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1939 to 1945 because these are the years the Second World War occured.
 
 The linear regression contains two variables of interest: average GDP per capitia for each country during the Second World War (explanatory variable: $X$) and average life expectancy for each country during the Second World War (response variable: $Y$).
 
@@ -132,20 +134,52 @@ summarised_lm <- clean_long_df |>
     ) |> 
   ungroup()
 
+# Get Regression Model:
 lm_model <- lm(avg_life_expectancy ~ avg_gdp_per_capita, 
                data = summarised_lm)
 ```
-From the linear regression model, the population regression model is represented by this equation: 
+
+From the linear regression model, the population regression model is represented by this equation:
 
 $$
 Y = `r round(lm_model$coefficients[1], 3)` + `r round(lm_model$coefficients[2], 5)`X + \epsilon
 $$
 
-
-Where $\epsilon$ ~ $\textit{N}(0, \sigma)$ accounts for random noise.
+Where $\epsilon$ \~ $\textit{N}(0, \sigma)$ accounts for random noise.
 
 # 2.3 Model Fit
 
 ```{r}
 
+# variance in the reponse values <- actual life expectancy
+# variance in the fitted value <- predicted life expectancy
+# variance in the residual <-  amount of variability in the responses that was not accounted for
+
+summary_var <- lm_model |> 
+  augment() |> 
+  # we only need three columns
+  select(avg_life_expectancy, .fitted, .resid) |> 
+  pivot_longer(cols = c(avg_life_expectancy, .fitted, .resid),
+               names_to = "variables",
+               values_to = "values"
+               ) |> 
+  map_at("variables", as.factor) |> 
+  bind_cols() |> 
+  # change the variable names
+  mutate(
+    variables = fct_recode(variables, 
+                          "Response" = "avg_life_expectancy",
+                          "Fitted" = ".fitted",
+                          "Residual" = ".resid")
+  ) |> 
+  group_by(variables) |> 
+  summarize(variance = round(var(values), 2)) |> 
+  kable(col.names = c("Variable Name", "𝛔̂²"),
+        caption = "Table 1: Variability of the Regression Model",
+        align = "c") |> 
+  
+  kable_classic(full_width = F, html_font = "Cambria")
+
+
+summary_var
 ```
