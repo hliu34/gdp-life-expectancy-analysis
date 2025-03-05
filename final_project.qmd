@@ -21,6 +21,7 @@ execute:
 library(tidyverse)
 library(gganimate)
 library(knitr)
+library(gifski)
 ```
 
 Previous code from project proposal:
@@ -79,9 +80,11 @@ clean_long_df |>
   ggplot(aes(x = gdp_per_capita, y = life_expectancy)) +
   geom_jitter(alpha = 0.5, size = 1) +
   labs(
-    x = "GDP per Capita (2017 PPP)",
-    y = "Life Expectancy",
-    title = "GDP per Capita vs. Life Expectancy in 2017 Globally")
+    x = "GDP per Capita (2017 US$ PPP)",
+    y = "",
+    title = "GDP per Capita vs. Life Expectancy in 2017 Globally",
+    subtitle = "Life Expectancy (in years)") + 
+  theme_linedraw()
 ```
 
 In this first above relationship, depicting GDP per Capita and Life Expectancy Globally in 2017, we see a positive relationship between the two variables. At first, as GDP per Capita increases, life expectancy increases dramatically. Then, as GDP per Capita reaches increases further, towards the bound of our graph, the positive relationship is less clear and there are diminishing returns in terms of life expectancy. This pattern is simlar to the graph of a logarithm. This graph shows an intensely unequal world, with GDP per Capita varying greatly for countries of varying development and wealth. Additionally, we see an unequal spread of life expectancy even among wealthier countries, where wealth inequality and various healthcare systems likely come into play.
@@ -96,17 +99,30 @@ animated_over_time <- clean_long_df |>
   ggplot(aes(x = gdp_per_capita, y = life_expectancy)) +
   geom_jitter(alpha = 0.5, size = 1) +
   labs(
-    x = "GDP per Capita (2017 PPP)",
-    y = "Life Expectancy",
-    title = "GDP per Capita vs. Life Expectancy: Year {round(frame_time)}") +
+    x = "GDP per Capita (2017 US$ PPP)",
+    y = "",
+    title = "GDP per Capita vs. Life Expectancy: Year {round(frame_time)}",
+    subtitle = "Life Expectancy (in years)") +
+  theme_linedraw() +
   transition_time(year) +
   ease_aes("linear")
 
-animation <- animate(animated_over_time, fps = 10, width = 800, height = 600)
-
-anim_save("animations/my_animation.gif", animation)
-
-include_graphics("animations/my_animation.gif")
+# Source: https://gganimate.com/
+# using gifski to render a video instead of gif
+# should show in the "viewer" tab and also when rendered as html
+animate(animated_over_time, renderer = gifski_renderer())
 ```
 
 This animation shows the same graph from above (GDP per Capita vs Life Expectancy) over the years 1800-2017. The value here comes from our ability to see an increasing gap between various country's wealth levels (and life expectancy as a result), but also in the overall life expectancy rising across the globe. This chart reinforces the idea presented above of ever-increasing wealth inequality globally, with some countries exploding in wealth and others staying nearly the same, all from relatively similar starting points in the year 1800. This animation also shows that the logarithmic pattern is followed with a medium strength.
+
+# 2.2 Linear Regression
+
+```{r}
+
+```
+
+# 2.3 Model Fit
+
+```{r}
+
+```
