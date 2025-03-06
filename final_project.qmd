@@ -9,7 +9,7 @@ format:
     html-table-processing: none
     code-tools: true
     toc: true
-    number-sections: true
+    number-sections: false
 editor: source
 execute: 
   error: true
@@ -75,7 +75,7 @@ clean_long_df <- long_life_expectancy |>
 
 # 2.1 Data Visualization
 
-## 1. The relationship between two quantitative variables you are investigating:
+## 1.The relationship between two quantitative variables you are investigating:
 
 ```{r}
 clean_long_df |>
@@ -151,10 +151,6 @@ Where $\epsilon$ \~ $\textit{N}(0, \sigma)$ accounts for random noise.
 
 ```{r}
 
-# variance in the reponse values <- actual life expectancy
-# variance in the fitted value <- predicted life expectancy
-# variance in the residual <-  amount of variability in the responses that was not accounted for
-
 summary_var <- lm_model |> 
   augment() |> 
   # we only need three columns
@@ -172,6 +168,7 @@ summary_var <- lm_model |>
                           "Fitted" = ".fitted",
                           "Residual" = ".resid")
   ) |> 
+  # make table fancy
   group_by(variables) |> 
   summarize(variance = round(var(values), 2)) |> 
   kable(col.names = c("Variable Name", "𝛔̂²"),
@@ -183,3 +180,22 @@ summary_var <- lm_model |>
 
 summary_var
 ```
+
+In Table 1, the estimated variances have been calculated for the predicted life expectancy (fitted values), the residuals, and the actual life expectancy (response values). First, the variance of the response values represents the total amount of variation in life expectancy across observations. Second, we have the variance of the fitted value, which captures how much of the variability in life expectancy is explained by GDP per capita. Third, is the residual variance, which represents the unexplained variability - that is, the portion of life expectancy variation that GDP per capita does not account for.
+
+### Assessing the Proportion of Variability Explained by the Model
+
+To determine the proportion of the variability in the response values that was accounted in our model, we would first need to calculate the **R²** , which is done by doing this:
+
+$$
+R^2 = \frac{\hat{\sigma}^2_{\text{Fitted}}}{\hat{\sigma}^2_{\text{Response}}}
+$$
+
+```{r}
+
+R2 <- 43.29 / 94.46  
+
+round(R2 * 100, 2)
+```
+
+Based on the result, our model explains about 45.83% of the variability in life expectancy using GDP per capita. This means that `r round((1-R2) * 100, 2)`% of variability remains unexplained. With an **R²** of 45.83%, the quality of our model is moderate. This suggest that the model is useful but not highly predictive. Although it will give us an insight into the relationship between economic prosperity and life expectancy, it lacks other factors needed for a highly accurate prediction. In other words, GDP per capita is not the sole determining factor for a person's life expectancy. There are other things to consider as well, such as healthcare access, education, environmental conditions, and government policies.
