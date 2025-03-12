@@ -4,7 +4,6 @@ author: "Kevin Cisneros-Cuevas, Soren Fliegel, Chris Liu, Haoxian Liu"
 code-fold: true
 format: 
   html:
-    code-fold: show
     embed-resources: true
     html-table-processing: none
     code-tools: true
@@ -199,3 +198,48 @@ round(R2 * 100, 2)
 ```
 
 Based on the result, our model explains about 45.83% of the variability in life expectancy using GDP per capita. This means that `r round((1-R2) * 100, 2)`% of variability remains unexplained. With an **R²** of 45.83%, the quality of our model is moderate. This suggest that the model is useful but not highly predictive. Although it will give us an insight into the relationship between economic prosperity and life expectancy, it lacks other factors needed for a highly accurate prediction. In other words, GDP per capita is not the sole determining factor for a person's life expectancy. There are other things to consider as well, such as healthcare access, education, environmental conditions, and government policies.
+
+# 3.1 Visualizing Simulations from the Model
+
+```{r}
+#| layout-ncol: 2
+set.seed(537) # reproducibility 
+
+rand_error <- function(x, mean = 0, sd) {
+  x + rnorm(length(x), mean = mean, sd = sd)
+}
+
+pred_life <- predict(lm_model)
+est_sigma <- sigma(lm_model)
+sim_response <- tibble(simulated_response = rand_error(pred_life, sd = est_sigma))
+
+full_data <- summarised_lm |>
+  select(avg_gdp_per_capita, avg_life_expectancy) |>
+  bind_cols(sim_response) 
+
+full_data |>
+  ggplot(aes(x = avg_gdp_per_capita, y = simulated_response)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Simulated Data GDP vs Life Expectancy, 1939 - 1945",
+       x = "GDP Per Capita", 
+       y = " ",
+       subtitle = "Simulated Life Expectancy") +
+  theme_linedraw() + 
+  xlim(0, 20000) + 
+  ylim(0, 100)
+
+full_data |>
+  ggplot(aes(x = avg_gdp_per_capita, y = avg_life_expectancy)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Observed GDP vs Life Expectancy, 1939 - 1945",
+       x = "GDP per Capita", 
+       y = "",
+       subtitle = "Actual Life Expectancy") +
+  theme_linedraw() + 
+  xlim(0, 20000) + 
+  ylim(0, 100)
+```
+
+# 3.2 Generating Multiple Predictive Checks
