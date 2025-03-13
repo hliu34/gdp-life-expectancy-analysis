@@ -74,7 +74,7 @@ clean_long_df <- long_life_expectancy |>
 
 # 2.1 Data Visualization
 
-## 1.The relationship between two quantitative variables you are investigating:
+## 1. The relationship between two quantitative variables you are investigating:
 
 ```{r}
 clean_long_df |>
@@ -89,7 +89,9 @@ clean_long_df |>
   theme_linedraw()
 ```
 
-In this first above relationship, depicting GDP per Capita and Life Expectancy Globally in 2017, we see a positive relationship between the two variables. At first, as GDP per Capita increases, life expectancy increases dramatically. Then, as GDP per Capita reaches increases further, towards the bound of our graph, the positive relationship is less clear and there are diminishing returns in terms of life expectancy. This pattern is simlar to the graph of a logarithm. This graph shows an intensely unequal world, with GDP per Capita varying greatly for countries of varying development and wealth. Additionally, we see an unequal spread of life expectancy even among wealthier countries, where wealth inequality and various healthcare systems likely come into play.
+Above is a graph scatter plot depicting the relationship between GDP per Capita versus life expectancy for the year 2017 and in 2017 USD; each dot is a country. The year 2017 was chosen because of its recency and the fact that all currency was adjusted to that year. The two dots in the bottom left represent Lesotho and the Central African Republic, both of which were suffering from unrest in 2017. The dots furthest to the right represent Luxembourg, Qatar, and Singapore; while they have the highest wealth per citizen, they don't necessarily have the longest life expectancy.
+
+We see a positive relationship between the two variables. At first, as GDP per Capita increases, life expectancy increases dramatically. Then, as GDP per Capita reaches increases further, towards the bound of our graph, the positive relationship is less clear and there are diminishing returns in terms of life expectancy. This pattern is similar to the graph of a logarithm. This graph shows an intensely unequal world, with GDP per Capita varying greatly for countries of varying development and wealth. Additionally, we see an unequal spread of life expectancy even among wealthier countries, where wealth inequality and various healthcare systems likely come into play. Another reason for choosing a more recent year is our ability to see the full spread of the pattern from poor countries to very wealthy countries, as this inequality was not present to the same degree in 1800.
 
 ## 2. How this relationship (from #1) has changed over time:
 
@@ -241,5 +243,7 @@ full_data |>
   xlim(0, 20000) + 
   ylim(0, 100)
 ```
+
+Above is a side-by-side showcasing the relationship between GDP and life expectancy for the years 1939-1945. On the right is the actual life expectancy, and on the left is our simulated model. We can see that there are several key similarities and differences between the visualizations. In both, we can see that the positive relationship is maintained, although it is more clearly visible in our simulated data due to an outlier in what actually happened (the low dots on the right). The outler, far below the predictive line, may have been experiencing unique economic conditions as a result of the war. Otherwise, the simulated data is visibly similar to the actual data, with a large clumping of countries from 0-5000 GDP per capita and life expectancy from 25-50. These countries were likely developing or heavily impacted by World War II, contraining both life expectency and GDP growth. As mentioned earlier, our model does a reasonable job of capturing the relationship between the two variables. However, other real-world events introduced complexities that it couldn't perfectly account for.
 
 # 3.2 Generating Multiple Predictive Checks
