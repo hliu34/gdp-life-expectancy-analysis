@@ -207,6 +207,7 @@ Based on the result, our model explains about 45.83% of the variability in life 
 #| layout-ncol: 2
 set.seed(537) # reproducibility 
 
+# function for adding noise
 rand_error <- function(x, mean = 0, sd) {
   x + rnorm(length(x), mean = mean, sd = sd)
 }
@@ -244,6 +245,93 @@ full_data |>
   ylim(0, 100)
 ```
 
-Above is a side-by-side showcasing the relationship between GDP and life expectancy for the years 1939-1945. On the right is the actual life expectancy, and on the left is our simulated model. We can see that there are several key similarities and differences between the visualizations. In both, we can see that the positive relationship is maintained, although it is more clearly visible in our simulated data due to an outlier in what actually happened (the low dots on the right). The outler, far below the predictive line, may have been experiencing unique economic conditions as a result of the war. Otherwise, the simulated data is visibly similar to the actual data, with a large clumping of countries from 0-5000 GDP per capita and life expectancy from 25-50. These countries were likely developing or heavily impacted by World War II, contraining both life expectency and GDP growth. As mentioned earlier, our model does a reasonable job of capturing the relationship between the two variables. However, other real-world events introduced complexities that it couldn't perfectly account for.
+Above is a side-by-side showcasing the relationship between GDP and life expectancy for the years 1939-1945. On the right is the actual life expectancy, and on the left is our simulated model. We can see that there are several key similarities and differences between the visualizations. In both, we can see that the positive relationship is maintained, although it is more clearly visible in our simulated data due to an outlier in what actually happened (the low dots on the right). The outlier, far below the predictive line, may have been experiencing unique economic conditions as a result of the war. Otherwise, the simulated data is visibly similar to the actual data, with a large clumping of countries from 0-5000 GDP per capita and life expectancy from 25-50. These countries were likely developing or heavily impacted by World War II, containing both life expectancy and GDP growth. As mentioned earlier, our model does a reasonable job of capturing the relationship between the two variables. However, other real-world events introduced complexities that it couldn't perfectly account for.
+
+### Simulated Vs. Observed Relationship 
+
+Based on comparing the shape of our scatterplots, the simulated data looks quite similar to what was observed, indicating that our model is doing a pretty good job of predicting life expectancy. Now, let's plot the relationship between the simulated and observed life expectancy for a closer look.
+
+```{r}
+
+full_data |> 
+  ggplot(aes(x = simulated_response, 
+             y = avg_life_expectancy)
+         ) + 
+  geom_point() + 
+   labs(title = "Relationship between Simulated and Observed Life Expectancy (1939 - 1945)",
+        x = "Simulated Life Expectancy (in years)", 
+        y = "",
+        subtitle = "Observed Life Expectancy (in years)" ) + 
+  geom_abline(slope = 1,
+              intercept = 0, 
+              color = "steelblue",
+              linetype = "dashed",
+              lwd = 1.5) +
+  theme_bw()
+```
+
+If the simulated data were identical to the observed data, then the data points would be directly on the dashed blue line, indicating a perfect fit. Points that are above the dashed line is when the predicted life expectancy is greater than the actual observed life expectancy. The ones below the dashed line is when the predicted life expectancy is less than the actual observed life expectancy. And in this specific case, we could see that there are roughly the same amount of overestimates and underestimates. Since they are not extremely close to the line, we determine that there is a “moderate” relationship between the observed values and simulated values. There is still some unexplained variation, meaning other factors might be influencing life expectancy that the model does not capture. This makes sense since we have also previously found in the model fit statistics that our model only explains about 45.83% (**R² ≈ 0.4583**) of the variability in life expectancy using GDP per capita.
 
 # 3.2 Generating Multiple Predictive Checks
+
+Previously, we conducted a single simulation to compare our model's predictions with the observed data. However, a single simulation only provides one possible set of predicted life expectancy which is not sufficient because in the real-world, data is influenced by random variation and uncertainty, so we would need to account for that as well. To better evaluate our model's performance, we chose to generate 1500 simulated datasets. A 1500 simulations will provide a good balance between computational efficiency and statistical reliability. Too few simulations may produce an inaccurate representation of the model's performance, while a much larger number would take a longer time and it might not result in any significant changes.
+
+```{r, include=FALSE}
+
+# Generate at least 1000 simulated datasets
+nsims <- 1500
+sims <- map_dfc(.x = 1:nsims,
+                .f = ~ tibble(sim = rand_error(pred_life, sd = est_sigma)))
+
+
+# rename column names
+colnames(sims) <- colnames(sims) |> 
+  str_replace(pattern = "\\.\\.\\.",
+                  replace = "_")
+
+```
+
+### Regression of each Simulated on the Original
+
+Now, once we have generated all 1500 simulations, all we have to do now is to go through an iterative process of fitting models for each of the simulated datasets. Doing this will allow us to assess the variability in predictions, determine whether our model systematically overestimates or underestimates the life expectancy, and evaluate its overall reliability. The goal is to ensure that our conclusion are not based on just a single outcome of the simulated data but instead account for different possible outcomes.
+
+```{r, include=FALSE}
+
+# removing NA's before joining 
+sims <- summarised_lm |> 
+  filter(!is.na(avg_life_expectancy)) |> 
+  select(avg_life_expectancy) |> 
+  bind_cols(sims)
+```
+
+### Extracting the R² Values
+
+Now, for us to determine how the model performed across many simulated datasets, we will need to take a look at the R²value, which essentially tells us how "close" the simulated values and the observed values are. R²value ranges from 0-1, where 1 indicates that a model did a very good job, whereas 0 indicates that the estimated relationship is extremely weak or is not close at all.
+
+```{r}
+
+# regress each simulated on the original, and keep the R2 from each regression
+sim_r_sq <- sims |> 
+  map(~ lm(avg_life_expectancy ~ .x, data = sims)) |> 
+  map(glance) |> 
+  map_dbl(~ .x$r.squared)
+
+sim_r_sq <- sim_r_sq[names(sim_r_sq) != "avg_life_expectancy"]
+```
+
+### Plotting the Distribution of Simulated R² Values
+
+Once we have extracted all of the R²values for each of the simulations, we can plot their distribution to observe the range in model performance. The distribution of these R²values will provide insight into how well our assumed model produce data similar to what was observed.
+
+```{r}
+
+tibble(sims = sim_r_sq) |> 
+  ggplot(aes(x = sims)) + 
+  geom_histogram(binwidth = 0.025) +
+  labs(x = expression("Simulated"~ R^2),
+       y = "",
+       subtitle = "Number of Simulated Models") +
+  theme_bw()
+```
+
+Looking at the distribution, it seems like the simulated datasets have R² values between approximately 0.08 to 0.36. On average, our simulated data account for about `r round(mean(sim_r_sq) * 100, 1)` % of the variability in the observed life expectancy. Therefore, the data simulated under this statistical model are **low to moderately** similar to what was observed. The model captures some of the patterns in the data but leaves a significant portion of the variability unexplained. The fact that most R² values are relatively low (with no values approaching 1) indicates that the model is not doing a really strong job of explaining the variation in life expectancy. The outcome is not entirely surprising because life expectancy is influenced by multitudes of factors such as education, health, environment conditions, government policies, and much more. Relying solely on GDP per capita as a predictor is likely insufficient to capture all these influences. Overall, while our model generates data that reflects some trends in the observed life expectancy, its limited explanatory power suggests that additional explanatory variables are needed to better predict life expectancy.
