@@ -192,7 +192,7 @@ $$
 R^2 = \frac{\hat{\sigma}^2_{\text{Fitted}}}{\hat{\sigma}^2_{\text{Response}}}
 $$
 
-```{r}
+```{r, include=FALSE}
 
 R2 <- 43.29 / 94.46  
 
@@ -249,7 +249,7 @@ Above is a side-by-side showcasing the relationship between GDP and life expecta
 
 ### Simulated Vs. Observed Relationship 
 
-Based on comparing the shape of our scatterplots, the simulated data looks quite similar to what was observed, indicating that our model is doing a pretty good job of predicting life expectancy. Now, let's plot the relationship between the simulated and observed life expectancy for a closer look.
+We would expect that if the regression model is a good model for life expectancy, then the simulated data should look similar to the observed data. Based on comparing the shape of our scatterplots, the simulated data looks quite similar to what was observed. There aren't any substantial differences between the two. Now, let's plot the relationship between the simulated and observed life expectancy for a closer look.
 
 ```{r}
 
@@ -334,4 +334,4 @@ tibble(sims = sim_r_sq) |>
   theme_bw()
 ```
 
-Looking at the distribution, it seems like the simulated datasets have R² values between approximately 0.08 to 0.36. On average, our simulated data account for about `r round(mean(sim_r_sq) * 100, 1)` % of the variability in the observed life expectancy. Therefore, the data simulated under this statistical model are **low to moderately** similar to what was observed. The model captures some of the patterns in the data but leaves a significant portion of the variability unexplained. The fact that most R² values are relatively low (with no values approaching 1) indicates that the model is not doing a really strong job of explaining the variation in life expectancy. The outcome is not entirely surprising because life expectancy is influenced by multitudes of factors such as education, health, environment conditions, government policies, and much more. Relying solely on GDP per capita as a predictor is likely insufficient to capture all these influences. Overall, while our model generates data that reflects some trends in the observed life expectancy, its limited explanatory power suggests that additional explanatory variables are needed to better predict life expectancy.
+Looking at the distribution, it seems like the simulated datasets have R² values between approximately 0.08 to 0.36. On average, our simulated data account for about `r round(mean(sim_r_sq) * 100, 1)` % of the variability in the observed life expectancy. Therefore, the data simulated under this statistical model are **low to moderately** similar to what was observed. The model captures some of the patterns in the data but leaves a significant portion of the variability unexplained. The fact that most R² values are relatively low (with no distribution near 1) indicates that the model is not doing a really strong job of explaining the variation in life expectancy. The outcome is not entirely surprising because life expectancy is influenced by multitudes of factors such as education, health, environment conditions, government policies, and much more. Relying solely on GDP per capita as a predictor is likely insufficient to capture all these influences. Overall, while our model generates data that reflects some trends in the observed life expectancy, its limited explanatory power suggests that additional explanatory variables are needed to better predict life expectancy.
