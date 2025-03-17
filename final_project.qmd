@@ -26,11 +26,29 @@ library(broom)
 library(kableExtra)
 ```
 
-Previous code from project proposal:
+# 1. Project Proposal + Data
+
+The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine. We chose to include these in the data, highilitng Taiwan and Palestine in particular, just as our sources did, despite the questioning of their statehoods.
 
 ```{r}
 life_expectancy <- read.csv("lex.csv")
+```
+
+Next, we will explore GDP (Gross Domestic Product) per capita, also assembled by "gapminder.org". GDP, like life expectancy, can be a way to compare the average standard of living across countries through how much economic output the average person creates. However, because the data viewed as an aggregate, GDP per capita does not account for inequality and differences that may occur through social stratification. A unit of observation is the GDP per capita in a country for a certain year in 2017 adjusted international dollars (which are equivalent to USD). This dataset includes blended data from 1800 to 2019, with projections again to 2100.
+
+```{r}
 gdp_per_capita <- read.csv("gdp_pcap.csv")
+```
+
+## Hypothesized Relationship between the Variables
+
+The relationship between GDP per capita and life expectancy is something that has already been looked at in other studies and has been talked about as the Preston curve. According to research from the [Centre for Economic Policy Research (CEPR)](https://cepr.org/voxeu/columns/health-income-and-preston-curve) higher income levels usually lead to a increase in life expectancy. This is a relationship that we hope to see with our data although sometimes there are other factors like healthcare policies or political stability that can influence the relationship between our two variables.
+
+## 1.1 Cleaning the Data
+
+The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data (20% is our threshold to reliable and representative data that minimizes biases introduced by imputation). Let also make the column names a little bit nicer by adding a prefix before the year instead of X. That way it is more descriptive.
+
+```{r}
 
 clean_life_expectancy <- life_expectancy |> 
   # calculating proportion of missing values for each row
@@ -39,18 +57,31 @@ clean_life_expectancy <- life_expectancy |>
   # gsub: https://www.statology.org/gsub-r/
   # rename: https://dplyr.tidyverse.org/reference/rename.html
   rename_with(~ gsub("^X", "lex_", .), starts_with("X"))
+```
 
+Let's also rename the year columns in the `gdp_per_capita` table. Also, it seems like not every value in the data set is numeric. Some of the GDP per-capita values have "k" notation (e.g. 24.5k instead of 24500). So, we will need to convert them to actual numbers.
+
+```{r}
+# using a function :)
 convert_k <- function(vec){
   has_k <- str_detect(vec, "k")
   vec_numeric <- as.numeric(str_replace(vec, "k", "")) 
   return(vec_numeric * ifelse(has_k, 1000, 1))   
 }
+```
 
+```{r}
 clean_gdp_per_capita <- gdp_per_capita |> 
   rename_with(~ gsub("^X", "gdp_per_capita_", .), starts_with("X")) |> 
   # all columns type -> numeric
   mutate(across(-country, convert_k))
+```
 
+## 1.2 Pivoting Longer
+
+Below, we have pivoted the `year` variable in both datasets to be a single column, as opposed to the data frames having a column representing a year.
+
+```{r}
 long_life_expectancy <- clean_life_expectancy |> 
   pivot_longer(
     cols = starts_with("lex_"), 
@@ -66,15 +97,25 @@ long_gdp_per_capita <- clean_gdp_per_capita |>
     names_prefix = "gdp_per_capita_", 
     values_to = "gdp_per_capita"
   )
+```
 
+## 1.3 Joining Datasets
+
+Finally, we join both datasets by country and year.
+
+```{r}
 clean_long_df <- long_life_expectancy |> 
   inner_join(long_gdp_per_capita, 
              by = c("country", "year")) 
 ```
 
-# 2.1 Data Visualization
+The `clean_long_df` will have 4 total columns: `country`, `year`, `life_expectancy`, and `gdp_per_capita`.
 
-## 1. The relationship between two quantitative variables you are investigating:
+# 2 Linear Regression
+
+## 2.1 Data Visualization
+
+### 1. The relationship between two quantitative variables you are investigating:
 
 ```{r}
 clean_long_df |>
@@ -93,7 +134,7 @@ Above is a graph scatter plot depicting the relationship between GDP per Capita 
 
 We see a positive relationship between the two variables. At first, as GDP per Capita increases, life expectancy increases dramatically. Then, as GDP per Capita reaches increases further, towards the bound of our graph, the positive relationship is less clear and there are diminishing returns in terms of life expectancy. This pattern is similar to the graph of a logarithm. This graph shows an intensely unequal world, with GDP per Capita varying greatly for countries of varying development and wealth. Additionally, we see an unequal spread of life expectancy even among wealthier countries, where wealth inequality and various healthcare systems likely come into play. Another reason for choosing a more recent year is our ability to see the full spread of the pattern from poor countries to very wealthy countries, as this inequality was not present to the same degree in 1800.
 
-## 2. How this relationship (from #1) has changed over time:
+### 2. How this relationship (from #1) has changed over time:
 
 ```{r}
 clean_long_df$year <- as.numeric(clean_long_df$year)
@@ -116,13 +157,13 @@ animated_over_time <- clean_long_df |>
 animate(animated_over_time, renderer = gifski_renderer(), nframes = 150, duration = 20)
 ```
 
-This animation shows the same graph from above (GDP per Capita vs Life Expectancy) over the years 1800-2017. The value here comes from our ability to see an increasing gap between various country's wealth levels (and life expectancy as a result), but also in the overall life expectancy rising across the globe. This chart reinforces the idea presented above of ever-increasing wealth inequality globally, with some countries exploding in wealth and others staying nearly the same, all from relatively similar starting points in the year 1800. This animation also shows that the logarithmic pattern is followed with a medium strength.
+This animation above shows the same graph from before (GDP per Capita vs Life Expectancy), but over the years 1800-2017. The value here comes from our ability to see an increasing gap between various country's wealth levels (and life expectancy as a result), but also in the overall life expectancy rising across the globe. This chart reinforces the idea presented above of ever-increasing wealth inequality globally, with some countries exploding in wealth and others staying nearly the same, all from relatively similar starting points in the year 1800. This animation also shows that the logarithmic pattern is followed with a medium strength.
 
-# 2.2 Linear Regression
+## 2.2 Linear Regression
 
-Before running the linear regression, summarising the data to one x value and one y value per country in the years 1939 to 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1939 to 1945 because these are the years the Second World War occured.
+Before running the linear regression, summarizing the data to one x value and one y value per country in the years 1939 to 1945 would be a great way to simplify the regression model and ensuring each country is represented consistently. We decided to investigate 1939 to 1945 because these are the years the Second World War occurred.
 
-The linear regression contains two variables of interest: average GDP per capitia for each country during the Second World War (explanatory variable: $X$) and average life expectancy for each country during the Second World War (response variable: $Y$).
+The linear regression contains two variables of interest: average GDP per capita for each country during the Second World War (explanatory variable: $X$) and average life expectancy for each country during the Second World War (response variable: $Y$).
 
 ```{r}
 options(scipen = 999) # disable scientific notation!
@@ -148,7 +189,7 @@ $$
 
 Where $\epsilon$ \~ $\textit{N}(0, \sigma)$ accounts for random noise.
 
-# 2.3 Model Fit
+## 2.3 Model Fit
 
 ```{r}
 
@@ -201,7 +242,9 @@ round(R2 * 100, 2)
 
 Based on the result, our model explains about 45.83% of the variability in life expectancy using GDP per capita. This means that `r round((1-R2) * 100, 2)`% of variability remains unexplained. With an **R²** of 45.83%, the quality of our model is moderate. This suggest that the model is useful but not highly predictive. Although it will give us an insight into the relationship between economic prosperity and life expectancy, it lacks other factors needed for a highly accurate prediction. In other words, GDP per capita is not the sole determining factor for a person's life expectancy. There are other things to consider as well, such as healthcare access, education, environmental conditions, and government policies.
 
-# 3.1 Visualizing Simulations from the Model
+# 3. Simulation
+
+## 3.1 Visualizing Simulations from the Model
 
 ```{r}
 #| layout-ncol: 2
@@ -247,7 +290,7 @@ full_data |>
 
 Above is a side-by-side showcasing the relationship between GDP and life expectancy for the years 1939-1945. On the right is the actual life expectancy, and on the left is our simulated model. We can see that there are several key similarities and differences between the visualizations. In both, we can see that the positive relationship is maintained, although it is more clearly visible in our simulated data due to an outlier in what actually happened (the low dots on the right). The outlier, far below the predictive line, may have been experiencing unique economic conditions as a result of the war. Otherwise, the simulated data is visibly similar to the actual data, with a large clumping of countries from 0-5000 GDP per capita and life expectancy from 25-50. These countries were likely developing or heavily impacted by World War II, containing both life expectancy and GDP growth. As mentioned earlier, our model does a reasonable job of capturing the relationship between the two variables. However, other real-world events introduced complexities that it couldn't perfectly account for.
 
-### Simulated Vs. Observed Relationship 
+### Simulated Vs. Observed Relationship
 
 We would expect that if the regression model is a good model for life expectancy, then the simulated data should look similar to the observed data. Based on comparing the shape of our scatterplots, the simulated data looks quite similar to what was observed. There aren't any substantial differences between the two. Now, let's plot the relationship between the simulated and observed life expectancy for a closer look.
 
@@ -272,7 +315,7 @@ full_data |>
 
 If the simulated data were identical to the observed data, then the data points would be directly on the dashed blue line, indicating a perfect fit. Points that are above the dashed line is when the predicted life expectancy is greater than the actual observed life expectancy. The ones below the dashed line is when the predicted life expectancy is less than the actual observed life expectancy. And in this specific case, we could see that there are roughly the same amount of overestimates and underestimates. Since they are not extremely close to the line, we determine that there is a “moderate” relationship between the observed values and simulated values. There is still some unexplained variation, meaning other factors might be influencing life expectancy that the model does not capture. This makes sense since we have also previously found in the model fit statistics that our model only explains about 45.83% (**R² ≈ 0.4583**) of the variability in life expectancy using GDP per capita.
 
-# 3.2 Generating Multiple Predictive Checks
+## 3.2 Generating Multiple Predictive Checks
 
 Previously, we conducted a single simulation to compare our model's predictions with the observed data. However, a single simulation only provides one possible set of predicted life expectancy which is not sufficient because in the real-world, data is influenced by random variation and uncertainty, so we would need to account for that as well. To better evaluate our model's performance, we chose to generate 1500 simulated datasets. A 1500 simulations will provide a good balance between computational efficiency and statistical reliability. Too few simulations may produce an inaccurate representation of the model's performance, while a much larger number would take a longer time and it might not result in any significant changes.
 
@@ -335,3 +378,7 @@ tibble(sims = sim_r_sq) |>
 ```
 
 Looking at the distribution, it seems like the simulated datasets have R² values between approximately 0.08 to 0.36. On average, our simulated data account for about `r round(mean(sim_r_sq) * 100, 1)` % of the variability in the observed life expectancy. Therefore, the data simulated under this statistical model are **low to moderately** similar to what was observed. The model captures some of the patterns in the data but leaves a significant portion of the variability unexplained. The fact that most R² values are relatively low (with no distribution near 1) indicates that the model is not doing a really strong job of explaining the variation in life expectancy. The outcome is not entirely surprising because life expectancy is influenced by multitudes of factors such as education, health, environment conditions, government policies, and much more. Relying solely on GDP per capita as a predictor is likely insufficient to capture all these influences. Overall, while our model generates data that reflects some trends in the observed life expectancy, its limited explanatory power suggests that additional explanatory variables are needed to better predict life expectancy.
+
+# References
+
+*Download the data*. Gapminder. (n.d.). https://www.gapminder.org/data/
