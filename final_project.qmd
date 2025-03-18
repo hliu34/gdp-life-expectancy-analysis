@@ -26,7 +26,9 @@ library(broom)
 library(kableExtra)
 ```
 
-# 1. Project Proposal + Data
+# Introduction
+
+# 1. The Data
 
 The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine. We chose to include these in the data, highilitng Taiwan and Palestine in particular, just as our sources did, despite the questioning of their statehoods.
 
@@ -46,21 +48,6 @@ The relationship between GDP per capita and life expectancy is something that ha
 
 ## 1.1 Cleaning the Data
 
-The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data (20% is our threshold to reliable and representative data that minimizes biases introduced by imputation). Let also make the column names a little bit nicer by adding a prefix before the year instead of X. That way it is more descriptive.
-
-```{r}
-
-clean_life_expectancy <- life_expectancy |> 
-  # calculating proportion of missing values for each row
-  # source: https://www.statology.org/rowmeans-in-r/
-  filter(rowMeans(across(-country, is.na)) <= 0.2) |> 
-  # gsub: https://www.statology.org/gsub-r/
-  # rename: https://dplyr.tidyverse.org/reference/rename.html
-  rename_with(~ gsub("^X", "lex_", .), starts_with("X"))
-```
-
-Let's also rename the year columns in the `gdp_per_capita` table. Also, it seems like not every value in the data set is numeric. Some of the GDP per-capita values have "k" notation (e.g. 24.5k instead of 24500). So, we will need to convert them to actual numbers.
-
 ```{r}
 # using a function :)
 convert_k <- function(vec){
@@ -71,17 +58,35 @@ convert_k <- function(vec){
 ```
 
 ```{r}
+clean_life_expectancy <- life_expectancy |> 
+  # calculating proportion of missing values for each row
+  # source: https://www.statology.org/rowmeans-in-r/
+  filter(rowMeans(across(-country, is.na)) <= 0.2) |> 
+  # gsub: https://www.statology.org/gsub-r/
+  # rename: https://dplyr.tidyverse.org/reference/rename.html
+  rename_with(~ gsub("^X", "lex_", .), starts_with("X"))
+
 clean_gdp_per_capita <- gdp_per_capita |> 
   rename_with(~ gsub("^X", "gdp_per_capita_", .), starts_with("X")) |> 
   # all columns type -> numeric
   mutate(across(-country, convert_k))
 ```
 
-## 1.2 Pivoting Longer
-
-Below, we have pivoted the `year` variable in both datasets to be a single column, as opposed to the data frames having a column representing a year.
+The life expectancy table consists of data from year 1800-2100 which is a large range. Looking at the data, it seems like some countries in this table have missing values for multiple years, which could be undesirable if we want to look for accurate trends. We could technically forward-fill or backward-fill missing data. However, it might also skew our results, so the best option in the end is to remove the countries with a lot of missing values. Let's say that countries with more than 20% missing values is bad data (20% is our threshold to reliable and representative data that minimizes biases introduced by imputation).
 
 ```{r}
+
+num_dropped <- nrow(life_expectancy) - nrow(clean_life_expectancy)
+dropped_countries <- anti_join(life_expectancy, clean_life_expectancy, by = "country")
+
+# Select a few example countries
+example_countries <- head(dropped_countries$country, 3) 
+```
+
+As a result, `r num_dropped` countries were dropped from the dataset due to having more than 20% missing values. This includes countries such as `r example_countries[1]`, `r example_countries[2]`, `r example_countries[3]`. The excessive amount of missing data for these countries is probably due to political, economic, or historical factors.
+
+```{r}
+
 long_life_expectancy <- clean_life_expectancy |> 
   pivot_longer(
     cols = starts_with("lex_"), 
@@ -97,25 +102,17 @@ long_gdp_per_capita <- clean_gdp_per_capita |>
     names_prefix = "gdp_per_capita_", 
     values_to = "gdp_per_capita"
   )
-```
 
-## 1.3 Joining Datasets
-
-Finally, we join both datasets by country and year.
-
-```{r}
 clean_long_df <- long_life_expectancy |> 
   inner_join(long_gdp_per_capita, 
              by = c("country", "year")) 
 ```
 
-The `clean_long_df` will have 4 total columns: `country`, `year`, `life_expectancy`, and `gdp_per_capita`.
-
 # 2 Linear Regression
 
 ## 2.1 Data Visualization
 
-### 1. The relationship between two quantitative variables you are investigating:
+### 1. The relationship between GDP per Capita and Life Expectancy
 
 ```{r}
 clean_long_df |>
@@ -134,7 +131,7 @@ Above is a graph scatter plot depicting the relationship between GDP per Capita 
 
 We see a positive relationship between the two variables. At first, as GDP per Capita increases, life expectancy increases dramatically. Then, as GDP per Capita reaches increases further, towards the bound of our graph, the positive relationship is less clear and there are diminishing returns in terms of life expectancy. This pattern is similar to the graph of a logarithm. This graph shows an intensely unequal world, with GDP per Capita varying greatly for countries of varying development and wealth. Additionally, we see an unequal spread of life expectancy even among wealthier countries, where wealth inequality and various healthcare systems likely come into play. Another reason for choosing a more recent year is our ability to see the full spread of the pattern from poor countries to very wealthy countries, as this inequality was not present to the same degree in 1800.
 
-### 2. How this relationship (from #1) has changed over time:
+### 2. How this relationship has changed over time?
 
 ```{r}
 clean_long_df$year <- as.numeric(clean_long_df$year)
@@ -233,7 +230,7 @@ $$
 R^2 = \frac{\hat{\sigma}^2_{\text{Fitted}}}{\hat{\sigma}^2_{\text{Response}}}
 $$
 
-```{r, include=FALSE}
+```{r, results='hide'}
 
 R2 <- 43.29 / 94.46  
 
@@ -319,7 +316,7 @@ If the simulated data were identical to the observed data, then the data points 
 
 Previously, we conducted a single simulation to compare our model's predictions with the observed data. However, a single simulation only provides one possible set of predicted life expectancy which is not sufficient because in the real-world, data is influenced by random variation and uncertainty, so we would need to account for that as well. To better evaluate our model's performance, we chose to generate 1500 simulated datasets. A 1500 simulations will provide a good balance between computational efficiency and statistical reliability. Too few simulations may produce an inaccurate representation of the model's performance, while a much larger number would take a longer time and it might not result in any significant changes.
 
-```{r, include=FALSE}
+```{r, results='hide', message=FALSE}
 
 # Generate at least 1000 simulated datasets
 nsims <- 1500
@@ -338,7 +335,7 @@ colnames(sims) <- colnames(sims) |>
 
 Now, once we have generated all 1500 simulations, all we have to do now is to go through an iterative process of fitting models for each of the simulated datasets. Doing this will allow us to assess the variability in predictions, determine whether our model systematically overestimates or underestimates the life expectancy, and evaluate its overall reliability. The goal is to ensure that our conclusion are not based on just a single outcome of the simulated data but instead account for different possible outcomes.
 
-```{r, include=FALSE}
+```{r, results='hide'}
 
 # removing NA's before joining 
 sims <- summarised_lm |> 
@@ -351,7 +348,7 @@ sims <- summarised_lm |>
 
 Now, for us to determine how the model performed across many simulated datasets, we will need to take a look at the R²value, which essentially tells us how "close" the simulated values and the observed values are. R²value ranges from 0-1, where 1 indicates that a model did a very good job, whereas 0 indicates that the estimated relationship is extremely weak or is not close at all.
 
-```{r}
+```{r, results='hide', warning=FALSE}
 
 # regress each simulated on the original, and keep the R2 from each regression
 sim_r_sq <- sims |> 
@@ -364,20 +361,23 @@ sim_r_sq <- sim_r_sq[names(sim_r_sq) != "avg_life_expectancy"]
 
 ### Plotting the Distribution of Simulated R² Values
 
-Once we have extracted all of the R²values for each of the simulations, we can plot their distribution to observe the range in model performance. The distribution of these R²values will provide insight into how well our assumed model produce data similar to what was observed.
+Once we have extracted all of the R²values for each of the simulations, we can plot their distribution to observe the range in model performance. The distribution of these R² values will provide insight into how well our assumed model produce data similar to what was observed.
 
 ```{r}
 
 tibble(sims = sim_r_sq) |> 
   ggplot(aes(x = sims)) + 
   geom_histogram(binwidth = 0.025) +
-  labs(x = expression("Simulated"~ R^2),
+  labs(title = "Distribution of R² values from Simulated Datasets",
+       x = expression("Simulated"~ R^2),
        y = "",
        subtitle = "Number of Simulated Models") +
   theme_bw()
 ```
 
 Looking at the distribution, it seems like the simulated datasets have R² values between approximately 0.08 to 0.36. On average, our simulated data account for about `r round(mean(sim_r_sq) * 100, 1)` % of the variability in the observed life expectancy. Therefore, the data simulated under this statistical model are **low to moderately** similar to what was observed. The model captures some of the patterns in the data but leaves a significant portion of the variability unexplained. The fact that most R² values are relatively low (with no distribution near 1) indicates that the model is not doing a really strong job of explaining the variation in life expectancy. The outcome is not entirely surprising because life expectancy is influenced by multitudes of factors such as education, health, environment conditions, government policies, and much more. Relying solely on GDP per capita as a predictor is likely insufficient to capture all these influences. Overall, while our model generates data that reflects some trends in the observed life expectancy, its limited explanatory power suggests that additional explanatory variables are needed to better predict life expectancy.
+
+# Conclusion
 
 # References
 
