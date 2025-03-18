@@ -28,6 +28,10 @@ library(kableExtra)
 
 # Introduction
 
+Life expectancy is often seen as a key measure of a population's well-being, but what factors influence how long people live? One widely studied relationship in economics and public health is between life expectancy and Gross Domestic Product per capita (Shkolnikov et al., 2019). What is GDP per capita? Imagine a country as a workshop. The GDP is like the total value of everything produced in that workshop- all the goods and services created, minus the raw materials it took to make them (Ibezim, 2023). Essentially, it is the grand total of a nation's economic output. And, people use it to measure the overall scale of a country's economic production. Now, GDP only tells us how big the nation's economy is, but what if we want to know the economic output per person in the nation. Then, all we have to do is to divide the country's total GDP by its total population. What this means is that we are observing how much, on average, each citizen is sharing in that prosperity. So, does that mean that a higher income translates to longer lives for its citizen?
+
+This study explores the relationship using data from **Gapminder,** which has historical and projected figures on life expectancy and GDP per capita for 196 countries. Our goal is to determine whether wealthier nations consistently experience longer lifespans, and assess the accuracy of GDP per capita as a predictor of life expectancy.
+
 # 1. The Data
 
 The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine. We chose to include these in the data, highilitng Taiwan and Palestine in particular, just as our sources did, despite the questioning of their statehoods.
@@ -361,7 +365,7 @@ sim_r_sq <- sim_r_sq[names(sim_r_sq) != "avg_life_expectancy"]
 
 ### Plotting the Distribution of Simulated R² Values
 
-Once we have extracted all of the R²values for each of the simulations, we can plot their distribution to observe the range in model performance. The distribution of these R² values will provide insight into how well our assumed model produce data similar to what was observed.
+Once we have extracted all of the R² values for each of the simulations, we can plot their distribution to observe the range in model performance. The distribution of these R² values will provide insight into how well our assumed model produce data similar to what was observed.
 
 ```{r}
 
@@ -379,6 +383,14 @@ Looking at the distribution, it seems like the simulated datasets have R² value
 
 # Conclusion
 
+Our findings reveal that GDP per capita and life expectancy exhibit a positive correlation, meaning that as GDP per capita increases, life expectancy tends to increase as well. However, GDP per capita alone is **not a strong predictor** of life expectancy. The R² values from our statistical model suggest that while GDP per capita is able to capture some trends based on our simulations, it is still leaving a significant portion of the variability in life expectancy unexplained. What this mean is that GDP per capita should not be the only thing we should be looking at when determining how long a person lives. It's indicating that there are other factors to consider such as public health, education, environmental conditions, and the government policies, which may play crucial roles in determining longevity.[^1]
+
+[^1]: All code to reproduce these analyses are available at <https://github.com/soren-fliegel/stat331_final_project>
+
 # References
 
 *Download the data*. Gapminder. (n.d.). https://www.gapminder.org/data/
+
+Shkolnikov, V. M., Andreev, E. M., Tursun-Zade, R., & Leon, D. A. (2019). Patterns in the relationship between life expectancy and gross domestic product in Russia in 2005–15: a cross-sectional analysis. *The Lancet Public Health*, *4*(4), e181–e188. https://doi.org/10.1016/s2468-2667(19)30036-2
+
+Ibezim, C. (2023, July 10). Exploring the Relationship between GDP and Life Expectancy in 6 Countries. *Medium*. https://medium.com/\@ibezimchike/exploring-the-relationship-between-gdp-and-life-expectancy-in-6-countries-a91a2bb118a5
