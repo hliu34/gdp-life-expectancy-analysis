@@ -193,15 +193,16 @@ $\hat{y}_i$ represents the predicted values of average life expectancy. The inte
 intercept <- coef(lm_model)[1]
 slope <- coef(lm_model)[2]
 
-ggplot(summarised_lm, aes(x = avg_gdp_per_capita, y = avg_life_expectancy)) +
-  geom_jitter(color = "blue", alpha = 0.7) +
-  geom_abline(intercept = intercept, slope = slope, color = "red", linewidth = 1) + 
-  labs(
-    title = "Average Life Expectancy vs. Average GDP per Capita (1939-1945)",
-    x = "Average GDP per Capita (2017 US $ PPP)",
-    y = "Average Life Expectancy (years)"
-  ) +
-  theme_linedraw()
+summarised_lm |>
+  ggplot(aes(x = avg_gdp_per_capita, y = avg_life_expectancy)) +
+    geom_jitter(color = "blue", alpha = 0.7) +
+    geom_abline(intercept = intercept, slope = slope, color = "red", linewidth = 1) + 
+    labs(
+      title = "Average Life Expectancy vs. Average GDP per Capita (1939-1945)",
+      x = "Average GDP per Capita (2017 US $ PPP)",
+      y = "Average Life Expectancy (years)"
+    ) +
+    theme_linedraw()
 ```
 Based off this plot of our linear regression model, the relationship between average GDP per capita and predicted average life expectancy generally follows a strong positive linear trend. This being said, there is no need for a log transformation.
 
