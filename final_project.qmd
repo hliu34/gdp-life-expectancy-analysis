@@ -34,7 +34,7 @@ This study explores the relationship using data from **Gapminder,** which has hi
 
 # 1. The Data
 
-The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine. We chose to include these in the data, highilitng Taiwan and Palestine in particular, just as our sources did, despite the questioning of their statehoods.
+The first dataset to explore is life expectancy, assembled by "gapminder.org" from various sources, with data ranging from 1800 to 2019, and projections until 2100 from the United Nations. A unit of observation is the number of years a newborn would be expected to live (given current the mortality rate) in a certain year and country. There are 196 listed countries, including Taiwan, Vatican City, and Palestine. We chose to include these in the data, highlighting [Taiwan](https://en.wikipedia.org/wiki/Foreign_relations_of_Taiwan) and [Palestine](https://en.wikipedia.org/wiki/International_recognition_of_Palestine) in particular, just as our sources did, despite the questioning of their statehoods.
 
 ```{r}
 life_expectancy <- read.csv("lex.csv")
@@ -87,7 +87,7 @@ dropped_countries <- anti_join(life_expectancy, clean_life_expectancy, by = "cou
 example_countries <- head(dropped_countries$country, 3) 
 ```
 
-As a result, `r num_dropped` countries were dropped from the dataset due to having more than 20% missing values. This includes countries such as `r example_countries[1]`, `r example_countries[2]`, `r example_countries[3]`. The excessive amount of missing data for these countries is probably due to political, economic, or historical factors.
+As a result, `r num_dropped` countries were dropped from the dataset due to having more than 20% missing values. This includes countries such as `r example_countries[1]`, `r example_countries[2]`, `r example_countries[3]`. The excessive amount of missing data for these countries is likely due to the size of these respective countries, therefore a limited statistical infastructure not allowing them to regularly collect data.
 
 ```{r}
 
